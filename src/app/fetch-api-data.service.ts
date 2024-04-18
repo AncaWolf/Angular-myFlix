@@ -5,7 +5,7 @@ import { Observable, throwError } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 //Declaring the api url that will provide data for the client app
-const apiUrl = 'https://awolf-movies-app.onrender.com';
+const apiUrl = 'https://awolf-movies-app.onrender.com/';
 
 @Injectable({
   providedIn: 'root'
@@ -26,7 +26,8 @@ export class UserRegistrationService {
   // api call - user login endpoint
   public userLogin(userDetails: any): Observable<any> {
     console.log(userDetails);
-    return this.http.post(apiUrl + 'login?' + new URLSearchParams(userDetails), {}).pipe(
+    return this.http.post(apiUrl + 'login', userDetails).pipe(
+      // return this.http.post(apiUrl + 'login?' + new URLSearchParams(userDetails), {}).pipe(
       catchError(this.handleError)
     );
   }
@@ -84,9 +85,22 @@ export class UserRegistrationService {
   }
 
   // api call - GET user endpoint (by username)
-  getOneUser(Username: string): Observable<any> {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    return user;
+  // getOneUser(Username: string): Observable<any> {
+  //   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  //   return user;
+  // }
+  getUser(username: string): Observable<any> {
+    const token = localStorage.getItem('token');
+    return this.http.get(apiUrl + 'users/' + username, {
+      headers: new HttpHeaders(
+        {
+          Authorization: 'Bearer' + token,
+        }
+      )
+    }).pipe(
+      map(this.extractResponseData),
+      catchError(this.handleError)
+    )
   }
 
   // api call - get favourite movies endpoint
@@ -98,13 +112,13 @@ export class UserRegistrationService {
       })
     }).pipe(
       map(this.extractResponseData),
-      map((data) => data.FavoriteMovies),
+      map((data) => data.FavouriteMovies),
       catchError(this.handleError)
     );
   }
 
   // api call - add a movie to favourites endpoint
-  addFavoriteMovie(MovieId: string, Username: string): Observable<any> {
+  addFavouriteMovie(MovieId: string, Username: string): Observable<any> {
     const token = localStorage.getItem('token');
 
     return this.http.post(apiUrl + `users/${Username}/${MovieId}`, {}, {
@@ -117,7 +131,7 @@ export class UserRegistrationService {
     );
   }
 
-  isFavoriteMovie(MovieId: string, Username: string): Observable<any> {
+  isFavouriteMovie(MovieId: string, Username: string): Observable<any> {
     const token = localStorage.getItem('token');
 
     return this.http.delete(apiUrl + `users/${Username}/${MovieId}`, {
@@ -158,7 +172,7 @@ export class UserRegistrationService {
   }
 
   // api call - delete movie from favourites endpoint
-  deleteFavoriteMovie(MovieId: string, Username: string): Observable<any> {
+  deleteFavouriteMovie(MovieId: string, Username: string): Observable<any> {
     const token = localStorage.getItem('token');
 
     return this.http.delete(apiUrl + 'users/' + Username + '/movies/' + MovieId, {
